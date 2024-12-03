@@ -77,6 +77,44 @@
       margin-bottom: 20px;
     }
 
+    .feedback {
+      position: absolute;
+      top: 20%;
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px 20px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    .feedback.positive {
+      background-color: #4caf50;
+    }
+
+    .feedback.negative {
+      background-color: #f44336;
+    }
+
+    .progress-bar {
+      width: 80%;
+      height: 10px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      margin: 20px auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress {
+      height: 100%;
+      background-color: #4caf50;
+      width: 0%;
+      transition: width 0.3s ease-out;
+    }
+
     .result-container {
       margin-top: 20px;
       text-align: center;
@@ -106,6 +144,9 @@
     <h2>¿Para quién es este curso?</h2>
     <p>Explora si este curso es para ti seleccionando las opciones que más se alinean contigo.</p>
     <div id="cardsContainer" class="cards-container"></div>
+    <div class="progress-bar">
+      <div id="progress" class="progress"></div>
+    </div>
     <div id="resultDisplay" class="result-container" style="display: none;">
       <p id="resultText"></p>
       <a href="#compra" id="buyButton" class="buy-button" style="display: none;">Compra aquí</a>
@@ -114,12 +155,12 @@
 
   <script>
     const cardsData = [
-      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Problemas con dietas', text: 'Aprende a mantener resultados.' },
-      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Efecto rebote', text: 'Evita recaídas y mantente sano.' },
-
-      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Falta de motivación', text: 'Aprende a mantenerte enfocado.' },
-      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Resultados temporales', text: 'Obtén cambios duraderos.' },
-    ];
+      { img: 'https://www.freepik.es/ia/imagenes/problemas-con-dietas', title: 'Problemas con dietas', text: 'Aprende a mantener resultados.' },
+      { img: 'https://www.freepik.es/ia/imagenes/efecto-rebote', title: 'Efecto rebote', text: 'Evita recaídas y mantente sano.' },
+      { img: 'https://www.freepik.es/ia/imagenes/por-donde-empezar', title: '¿Por dónde empezar?', text: 'Te guiamos paso a paso.' },
+      { img: 'https://www.freepik.es/ia/imagenes/falta-de-motivacion', title: 'Falta de motivación', text: 'Aprende a mantenerte enfocado.' },
+      { img: 'https://www.freepik.es/ia/imagenes/resultados-temporales', title: 'Resultados temporales', text: 'Obtén cambios duraderos.' },
+    ];;
 
     let currentCardIndex = 0;
     let points = 0;
@@ -128,6 +169,7 @@
     const resultDisplay = document.getElementById('resultDisplay');
     const resultText = document.getElementById('resultText');
     const buyButton = document.getElementById('buyButton');
+    const progressBar = document.getElementById('progress');
 
     function renderCard(index) {
       if (index >= cardsData.length) {
@@ -158,18 +200,23 @@
         currentX = e.clientX;
         diffX = currentX - startX;
         card.style.transform = `translateX(${diffX}px) rotate(${diffX * 0.05}deg)`;
+
+        showFeedback(diffX);
       });
 
       card.addEventListener('pointerup', () => {
         card.style.cursor = 'grab';
         if (diffX > 150) {
           points++;
+          updateProgress();
           removeCard(card, 'right');
         } else if (diffX < -150) {
+          updateProgress();
           removeCard(card, 'left');
         } else {
           card.style.transform = '';
         }
+        hideFeedback();
         startX = null;
       });
     }
@@ -185,6 +232,35 @@
       });
     }
 
+    function showFeedback(diffX) {
+      let feedback = document.querySelector('.feedback');
+      if (!feedback) {
+        feedback = document.createElement('div');
+        feedback.className = 'feedback';
+        cardsContainer.appendChild(feedback);
+      }
+
+      if (diffX > 0) {
+        feedback.textContent = 'Sí';
+        feedback.className = 'feedback positive';
+        feedback.style.opacity = Math.min(diffX / 150, 1);
+      } else if (diffX < 0) {
+        feedback.textContent = 'No';
+        feedback.className = 'feedback negative';
+        feedback.style.opacity = Math.min(Math.abs(diffX) / 150, 1);
+      }
+    }
+
+    function hideFeedback() {
+      const feedback = document.querySelector('.feedback');
+      if (feedback) feedback.style.opacity = 0;
+    }
+
+    function updateProgress() {
+      const progress = ((currentCardIndex + 1) / cardsData.length) * 100;
+      progressBar.style.width = `${progress}%`;
+    }
+
     function showResults() {
       resultDisplay.style.display = 'block';
       if (points > 3) {
@@ -196,7 +272,6 @@
       }
     }
 
-    // Render the first card
     renderCard(currentCardIndex);
   </script>
 
