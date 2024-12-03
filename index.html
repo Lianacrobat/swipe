@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f8f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .course-section {
+      height: 880px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .course-section h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .course-section p {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .cards-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .swipe-card {
+      position: absolute;
+      width: 80%;
+      max-width: 300px;
+      height: auto;
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+      cursor: grab;
+    }
+
+    .swipe-card img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .swipe-card h3 {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .swipe-card p {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .result-container {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .result-container p {
+      font-size: 1rem;
+      color: #4caf50;
+      font-weight: bold;
+    }
+
+    .buy-button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <section class="course-section">
+    <h2>¿Para quién es este curso?</h2>
+    <p>Explora si este curso es para ti seleccionando las opciones que más se alinean contigo.</p>
+    <div id="cardsContainer" class="cards-container"></div>
+    <div id="resultDisplay" class="result-container" style="display: none;">
+      <p id="resultText"></p>
+      <a href="#compra" id="buyButton" class="buy-button" style="display: none;">Compra aquí</a>
+    </div>
+  </section>
+
+  <script>
+    const cardsData = [
+      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Problemas con dietas', text: 'Aprende a mantener resultados.' },
+      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Efecto rebote', text: 'Evita recaídas y mantente sano.' },
+
+      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Falta de motivación', text: 'Aprende a mantenerte enfocado.' },
+      { img: 'https://images.peopleimages.com/picture/202404/3054584-portrait-black-man-or-smile-for-selfie-outdoor-for-social-media-profile-picture-or-post-update-happy-male-person-or-image-for-memory-in-holiday-weekend-trip-or-walking-in-countryside-or-nature-fit_400_400.jpg', title: 'Resultados temporales', text: 'Obtén cambios duraderos.' },
+    ];
+
+    let currentCardIndex = 0;
+    let points = 0;
+
+    const cardsContainer = document.getElementById('cardsContainer');
+    const resultDisplay = document.getElementById('resultDisplay');
+    const resultText = document.getElementById('resultText');
+    const buyButton = document.getElementById('buyButton');
+
+    function renderCard(index) {
+      if (index >= cardsData.length) {
+        showResults();
+        return;
+      }
+
+      const cardData = cardsData[index];
+      const card = document.createElement('div');
+      card.className = 'swipe-card';
+      card.innerHTML = `
+        <img src="${cardData.img}" alt="${cardData.title}">
+        <h3>${cardData.title}</h3>
+        <p>${cardData.text}</p>
+      `;
+      cardsContainer.appendChild(card);
+
+      // Add drag functionality
+      let startX, currentX, diffX;
+
+      card.addEventListener('pointerdown', (e) => {
+        startX = e.clientX;
+        card.style.cursor = 'grabbing';
+      });
+
+      card.addEventListener('pointermove', (e) => {
+        if (!startX) return;
+        currentX = e.clientX;
+        diffX = currentX - startX;
+        card.style.transform = `translateX(${diffX}px) rotate(${diffX * 0.05}deg)`;
+      });
+
+      card.addEventListener('pointerup', () => {
+        card.style.cursor = 'grab';
+        if (diffX > 150) {
+          points++;
+          removeCard(card, 'right');
+        } else if (diffX < -150) {
+          removeCard(card, 'left');
+        } else {
+          card.style.transform = '';
+        }
+        startX = null;
+      });
+    }
+
+    function removeCard(card, direction) {
+      card.style.transition = 'transform 0.5s ease-out';
+      card.style.transform = direction === 'right'
+        ? 'translateX(1000px) rotate(30deg)'
+        : 'translateX(-1000px) rotate(-30deg)';
+      card.addEventListener('transitionend', () => {
+        card.remove();
+        renderCard(++currentCardIndex);
+      });
+    }
+
+    function showResults() {
+      resultDisplay.style.display = 'block';
+      if (points > 3) {
+        resultText.textContent = '¡Definitivamente necesitas este curso!';
+        buyButton.style.display = 'inline-block';
+      } else {
+        resultText.textContent = 'Este curso podría ser útil para ti.';
+        buyButton.style.display = 'none';
+      }
+    }
+
+    // Render the first card
+    renderCard(currentCardIndex);
+  </script>
+
+</body>
+
+</html>
